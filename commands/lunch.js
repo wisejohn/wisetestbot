@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders')
 const lunchOrders = new Map()
+let currentListMessage
 
 const data = new SlashCommandBuilder()
 	.setName('lunch')
@@ -28,15 +29,21 @@ module.exports = {
 		if (interaction.options.getSubcommand() === 'add') {
 			const order = interaction.options.getString('order')
 			lunchOrders.set(interaction.user.username, order)
-
-			await interaction.reply(`Order Accepted`)
+			if (currentListMessage) {
+				await currentListMessage.delete()
+			}
+			let orderDisplay = "Lunch Orders"
+			lunchOrders.forEach(function(value, key) {
+				orderDisplay += `\n${key} - ${value}`
+			})
+			currentListMessage = await interaction.reply(orderDisplay, { fetchReply: true })
 		} else if (interaction.options.getSubcommand() === 'list') {
 			let orderDisplay = "Lunch Orders"
 			lunchOrders.forEach(function(value, key) {
-				//console.log(key + ' = ' + value)
 				orderDisplay += `\n${key} - ${value}`
 			})
-			await interaction.reply(orderDisplay)
+			currentListMessage = await interaction.reply(orderDisplay, { fetchReply: true })
+			//await interaction.reply(orderDisplay)
 		} else if (interaction.options.getSubcommand() === 'delete') {
 			lunchOrders.delete(interaction.user.username)
 			await interaction.reply(`Your order has been removed`)
